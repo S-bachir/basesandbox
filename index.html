@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BaseSandbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1916;
+    --ink-mid: #6b6960;
+    --ink-faint: #b5b2a9;
+    --ink-ghost: #e8e5df;
+    --paper: #f5f2ec;
+    --paper-warm: #ede9e1;
+    --accent: #2a2a2a;
+    --processing: #c8b89a;
+    --tag-bg: #e8e4db;
+    --tag-text: #6b6257;
+    --border: rgba(26,25,22,0.1);
+    --border-strong: rgba(26,25,22,0.2);
+    --font-sans: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  html { font-size: 16px; scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-weight: 300;
+    line-height: 1.7;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── NOISE TEXTURE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  /* ── LAYOUT ── */
+  .site-wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  /* ── NAV ── */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2.5rem 0 2rem;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .logo {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    color: var(--ink);
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  .logo span {
+    color: var(--ink-mid);
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 0;
+    background: var(--paper-warm);
+    border: 0.5px solid var(--border-strong);
+    border-radius: 2rem;
+    padding: 3px;
+  }
+
+  .tab-btn {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.4rem 1.1rem;
+    border: none;
+    background: transparent;
+    color: var(--ink-mid);
+    border-radius: 2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .tab-btn.active {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .tab-btn:hover:not(.active) {
+    color: var(--ink);
+  }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 5rem 0 3.5rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 2rem;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .hero-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 1.2rem;
+  }
+
+  .hero-title {
+    font-size: clamp(2.4rem, 5vw, 3.6rem);
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+
+  .hero-title em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--ink-mid);
+  }
+
+  .hero-meta {
+    text-align: right;
+  }
+
+  .hero-meta-line {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+    display: block;
+    line-height: 1.9;
+  }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2.5rem 0 1.5rem;
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .section-count {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--ink-ghost);
+    letter-spacing: 0.06em;
+  }
+
+  /* ── GRID ── */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 0.5px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--paper);
+    padding: 1.75rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    position: relative;
+    text-decoration: none;
+    display: block;
+    color: inherit;
+  }
+
+  .card:hover { background: var(--paper-warm); }
+
+  .card.processing {
+    cursor: default;
+  }
+
+  .card.processing:hover { background: var(--paper); }
+
+  .card-eyebrow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.2rem;
+  }
+
+  .card-type {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .card-status {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    border-radius: 2rem;
+  }
+
+  .status-live {
+    background: #e8f0e4;
+    color: #4a7040;
+    border: 0.5px solid #c5d9be;
+  }
+
+  .status-processing {
+    background: var(--tag-bg);
+    color: var(--processing);
+    border: 0.5px solid #ddd5c5;
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+
+  .card-title {
+    font-size: 1.05rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    margin-bottom: 0.6rem;
+    color: var(--ink);
+  }
+
+  .card.processing .card-title {
+    color: var(--ink-faint);
+  }
+
+  .card-desc {
+    font-size: 0.82rem;
+    color: var(--ink-mid);
+    line-height: 1.6;
+    margin-bottom: 1.2rem;
+    font-weight: 300;
+  }
+
+  .card.processing .card-desc {
+    color: var(--ink-ghost);
+  }
+
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    padding: 0.2rem 0.55rem;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    border-radius: 2px;
+    text-transform: uppercase;
+  }
+
+  .card.processing .tag {
+    opacity: 0.4;
+  }
+
+  .card-arrow {
+    position: absolute;
+    bottom: 1.75rem;
+    right: 1.75rem;
+    font-size: 0.9rem;
+    color: var(--ink-faint);
+    transition: transform 0.2s ease, color 0.15s ease;
+  }
+
+  .card:not(.processing):hover .card-arrow {
+    transform: translate(2px, -2px);
+    color: var(--ink);
+  }
+
+  /* ── PROCESSING OVERLAY ── */
+  .processing-msg {
+    position: absolute;
+    bottom: 1.75rem;
+    right: 1.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-ghost);
+  }
+
+  /* ── BLOG CARD (full width) ── */
+  .card.blog-card {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 2rem;
+    padding: 1.4rem 1.75rem;
+  }
+
+  .blog-card-left {}
+
+  .blog-card-date {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.3rem;
+  }
+
+  .blog-card-title {
+    font-size: 0.95rem;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+
+  .blog-card-arrow {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .card:hover .blog-card-arrow {
+    color: var(--ink);
+    transform: translateX(3px);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2.5rem 0 3rem;
+    margin-top: 3rem;
+    border-top: 0.5px solid var(--border);
+  }
+
+  .footer-sig {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.08em;
+  }
+
+  .footer-sig a {
+    color: var(--ink-mid);
+    text-decoration: none;
+    border-bottom: 0.5px solid var(--border-strong);
+    transition: color 0.15s;
+  }
+
+  .footer-sig a:hover { color: var(--ink); }
+
+  .footer-links {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .footer-links a {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .footer-links a:hover { color: var(--ink); }
+
+  /* ── TRANSITIONS FOR TAB SWITCH ── */
+  .tab-section {
+    display: block;
+    animation: fadeUp 0.3s ease forwards;
+  }
+
+  .tab-section.hidden {
+    display: none;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; }
+    .card.blog-card { grid-template-columns: 1fr; grid-column: 1; gap: 0.5rem; }
+    .hero { grid-template-columns: 1fr; }
+    .hero-meta { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<div class="site-wrapper">
+
+  <!-- NAV -->
+  <nav>
+    <a href="/" class="logo">Base<span>Sandbox</span></a>
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="showTab('projects', this)">Projects</button>
+      <button class="tab-btn" onclick="showTab('writing', this)">Writing</button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div>
+      <p class="hero-label">Research · Data · Geospatial</p>
+      <h1 class="hero-title">Work in<br><em>progress,</em><br>in public.</h1>
+    </div>
+    <div class="hero-meta">
+      <span class="hero-meta-line">B. Sabo</span>
+      <span class="hero-meta-line">Est. 2025</span>
+      <span class="hero-meta-line">Basel ↔ Field</span>
+    </div>
+  </div>
+
+  <!-- PROJECTS TAB -->
+  <div id="tab-projects" class="tab-section">
+    <div class="section-header">
+      <span class="section-label">Projects</span>
+      <span class="section-count">01 — 06</span>
+    </div>
+
+    <div class="grid">
+
+      <!-- Live project 1 -->
+      <a class="card" href="/fy-survey">
+        <div class="card-eyebrow">
+          <span class="card-type">Survey · Analysis</span>
+          <span class="card-status status-live">Live</span>
+        </div>
+        <h2 class="card-title">FY27 Survey</h2>
+        <p class="card-desc">Field data collection and visualization for multilateral indicators across key cohorts.</p>
+        <div class="card-tags">
+          <span class="tag">Python</span>
+          <span class="tag">KOBO</span>
+          <span class="tag">Dashboard</span>
+        </div>
+        <span class="card-arrow">↗</span>
+      </a>
+
+      <!-- Live project 2 -->
+      <a class="card" href="/gis-nepal">
+        <div class="card-eyebrow">
+          <span class="card-type">Geospatial</span>
+          <span class="card-status status-live">Live</span>
+        </div>
+        <h2 class="card-title">GIS Nepal</h2>
+        <p class="card-desc">Spatial mapping of humanitarian corridors and population displacement patterns.</p>
+        <div class="card-tags">
+          <span class="tag">QGIS</span>
+          <span class="tag">Leaflet</span>
+          <span class="tag">OSM</span>
+        </div>
+        <span class="card-arrow">↗</span>
+      </a>
+
+      <!-- Processing 1 -->
+      <div class="card processing">
+        <div class="card-eyebrow">
+          <span class="card-type">Data · Policy</span>
+          <span class="card-status status-processing">Processing</span>
+        </div>
+        <h2 class="card-title">Climate Indicators</h2>
+        <p class="card-desc">Longitudinal cross-country analysis of climate vulnerability indices.</p>
+        <div class="card-tags">
+          <span class="tag">R</span>
+          <span class="tag">WB Data</span>
+        </div>
+        <span class="processing-msg">Coming soon</span>
+      </div>
+
+      <!-- Processing 2 -->
+      <div class="card processing">
+        <div class="card-eyebrow">
+          <span class="card-type">ML · NLP</span>
+          <span class="card-status status-processing">Processing</span>
+        </div>
+        <h2 class="card-title">Field Report NLP</h2>
+        <p class="card-desc">Automated extraction and classification of key themes from humanitarian field reports.</p>
+        <div class="card-tags">
+          <span class="tag">Python</span>
+          <span class="tag">LLM</span>
+        </div>
+        <span class="processing-msg">Coming soon</span>
+      </div>
+
+      <!-- Processing 3 -->
+      <div class="card processing">
+        <div class="card-eyebrow">
+          <span class="card-type">Visualization</span>
+          <span class="card-status status-processing">Processing</span>
+        </div>
+        <h2 class="card-title">Aid Flow Atlas</h2>
+        <p class="card-desc">Interactive Sankey flows of multilateral aid disbursement across regions and sectors.</p>
+        <div class="card-tags">
+          <span class="tag">D3</span>
+          <span class="tag">OECD</span>
+        </div>
+        <span class="processing-msg">Coming soon</span>
+      </div>
+
+      <!-- Processing 4 -->
+      <div class="card processing">
+        <div class="card-eyebrow">
+          <span class="card-type">Dashboard</span>
+          <span class="card-status status-processing">Processing</span>
+        </div>
+        <h2 class="card-title">Indicators Monitor</h2>
+        <p class="card-desc">Live SDG progress tracker with configurable country and sector breakdowns.</p>
+        <div class="card-tags">
+          <span class="tag">React</span>
+          <span class="tag">UN API</span>
+        </div>
+        <span class="processing-msg">Coming soon</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- WRITING TAB -->
+  <div id="tab-writing" class="tab-section hidden">
+    <div class="section-header">
+      <span class="section-label">Writing</span>
+      <span class="section-count">01 — 04</span>
+    </div>
+
+    <div class="grid">
+
+      <a class="card blog-card" href="/writing/data-trust">
+        <div class="blog-card-left">
+          <span class="blog-card-date">Mar 2025</span>
+          <span class="blog-card-title">On data trust in low-resource field contexts</span>
+        </div>
+        <span class="blog-card-arrow">→</span>
+      </a>
+
+      <a class="card blog-card" href="/writing/geospatial-humanitarian">
+        <div class="blog-card-left">
+          <span class="blog-card-date">Jan 2025</span>
+          <span class="blog-card-title">Geospatial tools for the non-GIS practitioner</span>
+        </div>
+        <span class="blog-card-arrow">→</span>
+      </a>
+
+      <div class="card blog-card processing">
+        <div class="blog-card-left">
+          <span class="blog-card-date">— 2025</span>
+          <span class="blog-card-title" style="color: var(--ink-ghost);">Draft in progress...</span>
+        </div>
+        <span class="blog-card-arrow" style="opacity:0.3; animation: pulse 2.4s ease-in-out infinite;">···</span>
+      </div>
+
+      <div class="card blog-card processing">
+        <div class="blog-card-left">
+          <span class="blog-card-date">— 2025</span>
+          <span class="blog-card-title" style="color: var(--ink-ghost);">Draft in progress...</span>
+        </div>
+        <span class="blog-card-arrow" style="opacity:0.3; animation: pulse 2.4s ease-in-out infinite;">···</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <span class="footer-sig">
+      A sandbox by <a href="https://bachirsabo.com">B. Sabo</a> — multilateral · open
+    </span>
+    <div class="footer-links">
+      <a href="https://github.com/S-bachir">GitHub</a>
+      <a href="https://bachirsabo.com">Portfolio</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  function showTab(name, btn) {
+    document.querySelectorAll('.tab-section').forEach(s => s.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.remove('hidden');
+    btn.classList.add('active');
+  }
+</script>
+
+</body>
+</html>
